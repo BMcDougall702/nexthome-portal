@@ -289,7 +289,7 @@
         <button class="menu-btn" id="menuBtn" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
         <h1 id="pageTitle">Dashboard</h1>
       </div>
-      <div class="who">Welcome back, <b id="agentLabel">Agent</b><button class="signout" id="signoutBtn">Sign out</button></div>
+      <div class="who">Welcome back, <b id="agentLabel" onclick="openEditName()" title="Click to edit your name" style="cursor:pointer;border-bottom:1px dashed var(--gray)">Agent</b> <button class="signout" id="signoutBtn">Sign out</button></div>
     </div>
 
     <div class="content">
@@ -1019,6 +1019,20 @@ async function doLogin(){
 document.getElementById('loginBtn').onclick=doLogin;
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('signoutBtn').onclick=async()=>{await sb.auth.signOut();location.reload();};
+
+/* edit your display name */
+window.openEditName=()=>openModal(`
+  <h3>Your display name</h3><p class="hint">Shown in the welcome bar and as your name on the message board.</p>
+  <label class="field">Full name<input id="f_name" value="${esc(ME.name)}" placeholder="e.g. Beau McDougall"></label>
+  <div class="modal-actions"><button class="btn gray" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveName()">Save name</button></div>`);
+window.saveName=async()=>{
+  const n=v('f_name').trim();if(!n){alert('Enter your name.');return;}
+  const {error}=await sb.from('profiles').update({full_name:n}).eq('id',ME.id);
+  if(error){alert(error.message);return;}
+  ME.name=n;S.agent=n;
+  document.getElementById('agentLabel').textContent=n;
+  closeModal();renderDashboard();
+};
 
 (async function init(){
   calcCommission();calcMortgage();           // calculators work without data
